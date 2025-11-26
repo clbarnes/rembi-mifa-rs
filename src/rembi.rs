@@ -4,9 +4,9 @@
 //! (https://www.ebi.ac.uk/bioimage-archive/rembi-model-reference/) using
 //! `serde` for (de)serialization and `validator` for basic field validation.
 
-pub use super::mifa::{AnnotationType, Annotations, FileLevelMetadata};
-use iref::UriBuf;
-use jiff::Zoned;
+pub use super::mifa::{AnnotationType, FileLevelMetadata};
+pub use iref::UriBuf;
+pub use jiff::Zoned;
 use serde::{Deserialize, Serialize};
 use url::Url;
 use validator::{Validate, ValidationErrors};
@@ -18,6 +18,16 @@ use super::{Doi, OrcId};
 pub enum Affiliation {
     Url(OrganisationUrl),
     Info(OrganisationInfo),
+}
+
+impl Affiliation {
+    pub fn new_url(name: String, url: Url) -> Self {
+        Self::Url(OrganisationUrl { name, url })
+    }
+
+    pub fn new_info(name: String, address: String) -> Self {
+        Self::Info(OrganisationInfo { name, address })
+    }
 }
 
 impl Validate for Affiliation {
@@ -52,6 +62,19 @@ pub struct Author {
     pub role: Option<String>,
 }
 
+impl Author {
+    pub fn new(first_name: String, last_name: String, affiliation: Affiliation) -> Self {
+        Self {
+            first_name,
+            last_name,
+            affiliation,
+            email: None,
+            orcid: None,
+            role: None,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct OrganisationUrl {
     #[validate(length(min = 1))]
@@ -75,6 +98,12 @@ pub struct GrantReference {
     pub funder: String,
 }
 
+impl GrantReference {
+    pub fn new(identifier: String, funder: String) -> Self {
+        Self { identifier, funder }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct Funding {
     pub funding_statement: String,
@@ -82,6 +111,15 @@ pub struct Funding {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[validate(nested)]
     pub grant_references: Vec<GrantReference>,
+}
+
+impl Funding {
+    pub fn new(funding_statement: String) -> Self {
+        Self {
+            funding_statement,
+            grant_references: Default::default(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
@@ -108,6 +146,18 @@ pub struct Publication {
     pub pubmed_id: Option<String>,
 }
 
+impl Publication {
+    pub fn new(title: String) -> Self {
+        Self {
+            title,
+            authors: Default::default(),
+            doi: Default::default(),
+            year: Default::default(),
+            pubmed_id: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct Link {
     /// A link URL (e.g., external resource).
@@ -120,6 +170,16 @@ pub struct Link {
     pub link_description: Option<String>,
 }
 
+impl Link {
+    pub fn new(link_url: Url) -> Self {
+        Self {
+            link_url,
+            link_type: Default::default(),
+            link_description: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct StudyComponent {
     pub name: String,
@@ -127,6 +187,16 @@ pub struct StudyComponent {
     pub description: String,
 
     pub rembi_version: monostate::MustBe!("1.5"),
+}
+
+impl StudyComponent {
+    pub fn new(name: String, description: String) -> Self {
+        Self {
+            name,
+            description,
+            rembi_version: Default::default(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
@@ -139,6 +209,16 @@ pub struct Organism {
     // probably some constraints (e.g. URL)
     #[validate(length(min = 1))]
     pub ncbi_taxon: String,
+}
+
+impl Organism {
+    pub fn new(scientific_name: String, ncbi_taxon: String) -> Self {
+        Self {
+            scientific_name,
+            common_name: Default::default(),
+            ncbi_taxon,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
@@ -173,6 +253,19 @@ pub struct Biosample {
     pub experimental_variables: Option<Vec<String>>,
 }
 
+impl Biosample {
+    pub fn new(organism: Organism, biological_entity: String) -> Self {
+        Self {
+            organism,
+            biological_entity,
+            description: Default::default(),
+            intrinsic_variables: Default::default(),
+            extrinsic_variables: Default::default(),
+            experimental_variables: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct Specimen {
     /// How the sample was prepared for imaging.
@@ -181,6 +274,15 @@ pub struct Specimen {
     /// How the specimen was grown, e.g. cell line cultures, crosses or plant growth.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub growth_protocol: Option<String>,
+}
+
+impl Specimen {
+    pub fn new(sample_preparation: String) -> Self {
+        Self {
+            sample_preparation,
+            growth_protocol: Default::default(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
@@ -194,6 +296,16 @@ pub struct ImagingMethod {
     pub ontology_id: UriBuf,
 }
 
+impl ImagingMethod {
+    pub fn new(value: String, ontology_name: String, ontology_id: UriBuf) -> Self {
+        Self {
+            value,
+            ontology_name,
+            ontology_id,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct ImageAcquisition {
     #[validate(nested)]
@@ -204,6 +316,20 @@ pub struct ImageAcquisition {
 
     /// How the images were acquired, including instrument settings/parameters
     pub image_acquisition_parameters: String,
+}
+
+impl ImageAcquisition {
+    pub fn new(
+        imaging_method: ImagingMethod,
+        imaging_instrument: String,
+        image_acquisition_parameters: String,
+    ) -> Self {
+        Self {
+            imaging_method,
+            imaging_instrument,
+            image_acquisition_parameters,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
@@ -220,10 +346,30 @@ pub struct ImageCorrelation {
     pub transformation_matrix: String,
 }
 
+impl ImageCorrelation {
+    pub fn new(
+        spatial_and_temporal_alignment: String,
+        fiducials_used: String,
+        transformation_matrix: String,
+    ) -> Self {
+        Self {
+            spatial_and_temporal_alignment,
+            fiducials_used,
+            transformation_matrix,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct ImageAnalysis {
     /// How image analysis was carried out.
     pub analysis_overview: String,
+}
+
+impl ImageAnalysis {
+    pub fn new(analysis_overview: String) -> Self {
+        Self { analysis_overview }
+    }
 }
 
 /// Implementation note: this probably needs fields but is empty in the spec.
@@ -240,8 +386,8 @@ pub struct Study {
     #[validate(length(min = 25))]
     pub description: String,
 
-    /// Date/time until which the study is private.
-    pub private_until_date: Zoned,
+    /// Date until which the study is private.
+    pub private_until_date: jiff::civil::Date,
 
     /// Keywords describing your data that can be used to aid search and classification.
     ///
@@ -274,16 +420,81 @@ pub struct Study {
     pub rembi_version: monostate::MustBe!("1.5"),
 }
 
+impl Study {
+    pub fn new(
+        title: String,
+        description: String,
+        private_until_date: jiff::civil::Date,
+        keywords: String,
+        authors: Vec<Author>,
+    ) -> Self {
+        Self {
+            title,
+            description,
+            private_until_date,
+            keywords,
+            authors,
+            license: Default::default(),
+            funding: Default::default(),
+            publications: Default::default(),
+            links: Default::default(),
+            acknowledgements: Default::default(),
+            rembi_version: Default::default(),
+        }
+    }
+}
+
+/// A set of annotations for an AI-ready dataset.
+#[derive(Debug, Serialize, Deserialize, Validate, Clone)]
+pub struct Annotations {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[validate(nested)]
+    pub authors: Vec<Author>,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[validate(nested)]
+    pub file_metadata: Vec<FileLevelMetadata>,
+
+    pub annotation_overview: String,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub annotation_type: Vec<AnnotationType>,
+
+    pub annotation_method: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annotation_criteria: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annotation_coverage: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annotation_confidence_level: Option<String>,
+}
+
+impl Annotations {
+    pub fn new(annotation_overview: String, annotation_method: String) -> Self {
+        Self {
+            authors: Default::default(),
+            file_metadata: Default::default(),
+            annotation_overview,
+            annotation_type: Default::default(),
+            annotation_method,
+            annotation_criteria: Default::default(),
+            annotation_coverage: Default::default(),
+            annotation_confidence_level: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct RembiStudy {
     #[validate(nested)]
     pub study: Study,
 
-    #[serde(default)]
     #[validate(nested)]
     pub study_components: Vec<StudyComponent>,
 
-    #[serde(default)]
     #[validate(nested)]
     pub sample: Vec<Biosample>,
 
@@ -306,15 +517,31 @@ pub struct RembiStudy {
     pub annotations: Option<Annotations>,
 }
 
+impl RembiStudy {
+    pub fn new(
+        study: Study,
+        study_components: Vec<StudyComponent>,
+        sample: Vec<Biosample>,
+        specimen: Vec<Specimen>,
+        image_acquisition: Vec<ImageAcquisition>,
+    ) -> Self {
+        Self {
+            study,
+            study_components,
+            sample,
+            specimen,
+            image_acquisition,
+            image_correlation: Default::default(),
+            image_analysis: Default::default(),
+            annotations: Default::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jiff::{Timestamp, tz::TimeZone};
     use validator::Validate;
-
-    fn date() -> Zoned {
-        Zoned::new(Timestamp::from_second(1).unwrap(), TimeZone::UTC)
-    }
 
     #[test]
     fn basic_study_validation_and_serialization() {
@@ -333,7 +560,7 @@ mod tests {
         let study = Study {
             title: "Example REMBI study".into(),
             description: "A minimal example of a REMBI Study struct".into(),
-            private_until_date: date(),
+            private_until_date: jiff::civil::Date::ZERO,
             keywords: "example, rembi".into(),
             authors: vec![author.clone()],
             license: Default::default(),

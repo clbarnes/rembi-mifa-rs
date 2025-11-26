@@ -21,8 +21,8 @@ pub struct Formatted {
 
 fn trim_base_url(s: &str) -> &str {
     for base in [ORCID_BASE, ORCID_BASE_HTTP] {
-        if s.starts_with(base) {
-            return &s[base.len()..];
+        if let Some(s2) = s.strip_prefix(base) {
+            return s2;
         }
     }
     s

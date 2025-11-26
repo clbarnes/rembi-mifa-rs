@@ -1,11 +1,9 @@
-//! REMBI model Rust representation
-//!
-//! This crate provides a set of structs to represent the REMBI model reference
-//! (https://www.ebi.ac.uk/bioimage-archive/rembi-model-reference/) using
-//! `serde` for (de)serialization and `validator` for basic field validation.
+#![doc = include_str!("../README.md")]
+pub use iref;
+pub use jiff;
 use serde::{Deserialize, Serialize};
-pub use validator::Validate;
-use validator::ValidationErrors;
+pub use url;
+pub use validator::{Validate, ValidationErrors};
 
 pub mod doi;
 pub use doi::Doi;
@@ -14,7 +12,9 @@ pub use orcid::OrcId;
 pub mod mifa;
 pub mod rembi;
 
+
 // TODO: may not be necessary if validator does it internally.
+// TODO: asref, deref, borrow etc.
 /// Wrapper type which guarantees its contents are valid.
 #[derive(Debug, Serialize, Clone)]
 #[serde(transparent)]
@@ -26,8 +26,13 @@ impl<T: Validate> Valid<T> {
         Ok(Self(value))
     }
 
+    /// Return a reference to the contained value.
+    pub fn inner(&self) -> &T {
+        &self.0
+    }
+
+    /// Consume the wrapper and return the contained value.
     pub fn into_inner(self) -> T {
-        // todo: asref, deref, borrow etc.
         self.0
     }
 }
