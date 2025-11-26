@@ -69,11 +69,19 @@ impl FromStr for Doi {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Format {
+    /// Print a URI with the scheme `doi:` followed by the DOI name.
+    ///
+    /// Preferred by the DOI Handbook.
     Scheme,
+    /// Print a URL using the https://doi.org/ proxy.
+    ///
+    /// Preferred by APA, DataCite etc.
     DoiOrg,
-    Normal,
+    /// Print only the DOI name; should only be used when the context makes it clear that it is a DOI.
+    Name,
 }
 
+/// Wrapper over a reference to a DOI and a way to format it.
 pub struct Formatted<'a> {
     format: Format,
     doi: &'a Doi,
@@ -84,7 +92,7 @@ impl<'a> std::fmt::Display for Formatted<'a> {
         match self.format {
             Format::Scheme => f.write_str(SCHEME)?,
             Format::DoiOrg => f.write_str(BASE_URL)?,
-            Format::Normal => (),
+            Format::Name => (),
         }
         f.write_str(&self.doi.0)
     }

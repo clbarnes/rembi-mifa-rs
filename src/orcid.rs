@@ -5,6 +5,7 @@ use serde::Serialize;
 const ORCID_BASE: &str = "https://orcid.org/";
 const ORCID_BASE_HTTP: &str = "http://orcid.org/";
 
+/// Options for how to format an ORCiD ID.
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone, Copy, Default)]
 pub enum Format {
     Short,
@@ -13,6 +14,7 @@ pub enum Format {
     Url,
 }
 
+/// Wrapper around an ORCiD ID and a preferred format, for writing.
 #[derive(Debug)]
 pub struct Formatted {
     format: Format,
@@ -50,6 +52,7 @@ impl std::fmt::Display for Formatted {
     }
 }
 
+/// Representation of an ORCiD ID.
 #[derive(PartialEq, Eq, Hash, PartialOrd, Ord, Clone, Copy)]
 pub struct OrcId {
     /// All values must be in 0..=9
@@ -145,7 +148,7 @@ impl Iterator for OrcIdDigits<'_> {
                 let c = if self.orcid.checksum == 10 {
                     'X'
                 } else {
-                    std::char::from_digit(self.orcid.checksum as u32, 10).unwrap()
+                    char::from_digit(self.orcid.checksum as u32, 10).unwrap()
                 };
                 self.idx += 1;
                 Some(c)

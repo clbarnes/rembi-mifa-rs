@@ -1,8 +1,54 @@
-//! REMBI model Rust representation
+//! REMBI metadata as described here <https://www.ebi.ac.uk/bioimage-archive/rembi-model-reference>.
 //!
-//! This crate provides a set of structs to represent the REMBI model reference
-//! (https://www.ebi.ac.uk/bioimage-archive/rembi-model-reference/) using
-//! `serde` for (de)serialization and `validator` for basic field validation.
+//! ## Example
+//!
+//! ```
+//! use rembi_mifa::{rembi, Validate};
+//!
+//!
+//! let my_study = rembi::RembiStudy::new(
+//!     rembi::Study::new(
+//!         "This is the title of my study with REMBI metadata".to_string(),
+//!         "This is a study which uses REMBI metadata.".to_string(),
+//!         jiff::civil::Date::new(2025, 11, 28).unwrap(),
+//!         "some, delimited | keywords; presumably".to_string(),
+//!         vec![rembi::Author::new(
+//!             "Alice".to_string(),
+//!             "Bobberton".to_string(),
+//!             rembi::Affiliation::new_url(
+//!                 "Charlietown University".to_string(),
+//!                 "https://charlie.edu".parse().unwrap(),
+//!             ),
+//!         )],
+//!     ),
+//!     vec![rembi::StudyComponent::new(
+//!         "Experiment A".to_string(),
+//!         "Light microscopy image".to_string(),
+//!     )],
+//!     vec![rembi::Biosample::new(
+//!         rembi::Organism::new(
+//!             "Drosophila melanogaster".to_string(),
+//!             "http://purl.obolibrary.org/obo/NCBITaxon_7215".to_string(),
+//!         ),
+//!         "Posterior segment".to_string(),
+//!     )],
+//!     vec![rembi::Specimen::new(
+//!         "Sacrificed and fixed in superglue".to_string(),
+//!     )],
+//!     vec![rembi::ImageAcquisition::new(
+//!         rembi::ImagingMethod::new(
+//!             "some value".to_string(),
+//!             "FBbi_root:00000000".to_string(),
+//!             "http://purl.obolibrary.org/obo/FBbi_root_00000000"
+//!                 .parse()
+//!                 .unwrap(),
+//!         ),
+//!         "Samsung Galaxy S2".to_string(),
+//!         "Maximum zoom".to_string(),
+//!     )],
+//! );
+//! my_study.validate().unwrap()
+//! ```
 
 pub use super::mifa::{AnnotationType, FileLevelMetadata};
 pub use iref::UriBuf;
@@ -558,7 +604,7 @@ mod tests {
         };
 
         let study = Study {
-            title: "Example REMBI study".into(),
+            title: "Example REMBI study with a long name".into(),
             description: "A minimal example of a REMBI Study struct".into(),
             private_until_date: jiff::civil::Date::ZERO,
             keywords: "example, rembi".into(),
@@ -583,11 +629,57 @@ mod tests {
         };
 
         // Validate
-        assert!(rs.validate().is_ok());
+        rs.validate().unwrap();
 
         // Serialize to JSON and back
         let json = serde_json::to_string_pretty(&rs).expect("serialize");
         let parsed: RembiStudy = serde_json::from_str(&json).expect("deserialize");
         assert!(parsed.validate().is_ok());
+    }
+
+    #[test]
+    fn test_new_methods() {
+        use crate::rembi;
+        let _my_study = rembi::RembiStudy::new(
+            rembi::Study::new(
+                "This is the title of my study with REMBI metadata".to_string(),
+                "This is a study which uses REMBI metadata.".to_string(),
+                jiff::civil::Date::new(2025, 11, 28).unwrap(),
+                "some, delimited | keywords; presumably".to_string(),
+                vec![rembi::Author::new(
+                    "Alice".to_string(),
+                    "Bobberton".to_string(),
+                    rembi::Affiliation::new_url(
+                        "Charlietown University".to_string(),
+                        "https://charlie.edu".parse().unwrap(),
+                    ),
+                )],
+            ),
+            vec![rembi::StudyComponent::new(
+                "Experiment A".to_string(),
+                "Light microscopy image".to_string(),
+            )],
+            vec![rembi::Biosample::new(
+                rembi::Organism::new(
+                    "Drosophila melanogaster".to_string(),
+                    "http://purl.obolibrary.org/obo/NCBITaxon_7215".to_string(),
+                ),
+                "Posterior segment".to_string(),
+            )],
+            vec![rembi::Specimen::new(
+                "Sacrificed and fixed in superglue".to_string(),
+            )],
+            vec![rembi::ImageAcquisition::new(
+                rembi::ImagingMethod::new(
+                    "some value".to_string(),
+                    "FBbi_root:00000000".to_string(),
+                    "http://purl.obolibrary.org/obo/FBbi_root_00000000"
+                        .parse()
+                        .unwrap(),
+                ),
+                "Samsung Galaxy S2".to_string(),
+                "Maximum zoom".to_string(),
+            )],
+        );
     }
 }

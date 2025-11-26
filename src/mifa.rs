@@ -1,8 +1,3 @@
-//! MIFA model Rust representation
-//!
-//! This crate provides a set of structs to represent the MIFA model reference
-//! (https://www.ebi.ac.uk/bioimage-archive/mifa-model-reference/) using
-//! `serde` for (de)serialization and `validator` for basic field validation.
 use serde::{Deserialize, Serialize};
 use url::Url;
 use validator::Validate;

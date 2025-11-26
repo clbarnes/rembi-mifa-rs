@@ -12,7 +12,6 @@ pub use orcid::OrcId;
 pub mod mifa;
 pub mod rembi;
 
-
 // TODO: may not be necessary if validator does it internally.
 // TODO: asref, deref, borrow etc.
 /// Wrapper type which guarantees its contents are valid.

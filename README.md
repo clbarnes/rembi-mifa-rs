@@ -20,16 +20,16 @@ Further fields can be set with direct field access.
 It is possible for the types to contain invalid data.
 Use the [Valid] wrapper for serialising and deserialising to ensure that no invalid data is ingested or written.
 
-```rust
+```rust,ignore
 use rembi_mifa::{rembi::RembiStudy, Valid};
 let maybe_invalid = RembiStudy::new(...);
 let valid = Valid::try_new(maybe_invalid).expect("should be valid");
 
 // serialises transparently
-let valid_str = serde_json::to_string(valid);
+let valid_str = serde_json::to_string(&valid).unwrap();
 
 // would refuse to deserialise if the data were invalid
-let valid_deser: Valid<RembiStudy> = serde_json::from_str(&valid_str);
+let valid_deser: Valid<RembiStudy> = serde_json::from_str(&valid_str).unwrap();
 
 // extract the data, or use `.inner()` to get a reference
 let deser = valid_deser.into_inner();
@@ -43,7 +43,7 @@ This means that there are some types with the same name but different fields.
 We recommended that, in contexts where the specification in use is unclear,
 the types are always referred to in namespaced form i.e.
 
-```rust
+```rust,ignore
 use rembi_mifa::{rembi, mifa};
 let a1 = rembi::Author::new(...);
 let a2 = mifa::Author::new(...);
